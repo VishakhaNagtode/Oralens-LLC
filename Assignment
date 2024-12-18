@@ -1,0 +1,124 @@
+// Import necessary libraries
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.Select;
+import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+public class PatientManagementTests {
+
+    private WebDriver driver;
+
+    // Setup method to initialize WebDriver
+    @BeforeMethod
+    public void setUp() {
+        System.setProperty("webdriver.chrome.driver", "path/to/chromedriver");
+        driver = new ChromeDriver();
+        driver.manage().window().maximize();
+        driver.get("http://hospital-management-system.com"); // Replace with actual URL
+    }
+
+    // Test case: Patient Record Creation with Valid Data
+    @Test
+    public void testCreatePatientRecord_ValidData() {
+        driver.findElement(By.id("addPatientButton")).click();
+
+        // Fill patient details
+        driver.findElement(By.id("patientName")).sendKeys("John Doe");
+        driver.findElement(By.id("patientAge")).sendKeys("30");
+        driver.findElement(By.id("patientEmail")).sendKeys("johndoe@example.com");
+
+        // Select Gender
+        WebElement genderDropdown = driver.findElement(By.id("patientGender"));
+        Select selectGender = new Select(genderDropdown);
+        selectGender.selectByVisibleText("Male");
+
+        // Submit the form
+        driver.findElement(By.id("submitPatientForm")).click();
+
+        // Validate success message
+        String successMessage = driver.findElement(By.id("successMessage")).getText();
+        Assert.assertEquals(successMessage, "Patient record created successfully.");
+    }
+
+    // Test case: Patient Record Creation with Invalid Data
+    @Test
+    public void testCreatePatientRecord_InvalidData() {
+        driver.findElement(By.id("addPatientButton")).click();
+
+        // Fill invalid patient details
+        driver.findElement(By.id("patientName")).sendKeys("");
+        driver.findElement(By.id("patientAge")).sendKeys("invalidAge");
+        driver.findElement(By.id("patientEmail")).sendKeys("invalidEmail");
+
+        // Submit the form
+        driver.findElement(By.id("submitPatientForm")).click();
+
+        // Validate error messages
+        String nameError = driver.findElement(By.id("nameError")).getText();
+        Assert.assertEquals(nameError, "Name is required.");
+
+        String ageError = driver.findElement(By.id("ageError")).getText();
+        Assert.assertEquals(ageError, "Age must be a number.");
+
+        String emailError = driver.findElement(By.id("emailError")).getText();
+        Assert.assertEquals(emailError, "Invalid email format.");
+    }
+
+    // Test case: Search Functionality with Valid Data
+    @Test
+    public void testSearchPatient_ValidData() {
+        driver.findElement(By.id("searchInput")).sendKeys("John Doe");
+        driver.findElement(By.id("searchButton")).click();
+
+        // Validate search results
+        WebElement resultRow = driver.findElement(By.xpath("//table[@id='patientTable']//tr[1]"));
+        Assert.assertTrue(resultRow.getText().contains("John Doe"));
+    }
+
+    // Test case: Search Functionality with Invalid Data
+    @Test
+    public void testSearchPatient_InvalidData() {
+        driver.findElement(By.id("searchInput")).sendKeys("Nonexistent Patient");
+        driver.findElement(By.id("searchButton")).click();
+
+        // Validate no results message
+        String noResultsMessage = driver.findElement(By.id("noResultsMessage")).getText();
+        Assert.assertEquals(noResultsMessage, "No results found.");
+    }
+
+    // Test case: Pagination Functionality
+    @Test
+    public void testPagination() {
+        driver.findElement(By.id("nextPageButton")).click();
+
+        // Validate the page number
+        String currentPage = driver.findElement(By.id("currentPageNumber")).getText();
+        Assert.assertEquals(currentPage, "2");
+
+        driver.findElement(By.id("previousPageButton")).click();
+        currentPage = driver.findElement(By.id("currentPageNumber")).getText();
+        Assert.assertEquals(currentPage, "1");
+    }
+
+    // Test case: Sorting Functionality
+    @Test
+    public void testSorting() {
+        driver.findElement(By.id("sortByNameButton")).click();
+
+        // Validate sorted order
+        WebElement firstRow = driver.findElement(By.xpath("//table[@id='patientTable']//tr[1]/td[1]"));
+        WebElement secondRow = driver.findElement(By.xpath("//table[@id='patientTable']//tr[2]/td[1]"));
+        Assert.assertTrue(firstRow.getText().compareTo(secondRow.getText()) < 0);
+    }
+
+    // Tear down method to close browser
+    @AfterMethod
+    public void tearDown() {
+        driver.quit();
+    }
+}
