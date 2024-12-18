@@ -1,0 +1,201 @@
+ 1. Automated Test Scripts
+Setup:
+Install and configure the environment:
+
+Install Java JDK (e.g., JDK 11 or later).
+Install Selenium WebDriver libraries.
+Set up Maven or Gradle for dependency management.
+Use an IDE like IntelliJ IDEA or Eclipse.
+Add Maven dependencies for Selenium, TestNG, and other tools:
+
+xml
+Copy code
+<dependencies>
+    <dependency>
+        <groupId>org.seleniumhq.selenium</groupId>
+        <artifactId>selenium-java</artifactId>
+        <version>4.x.x</version>
+    </dependency>
+    <dependency>
+        <groupId>org.testng</groupId>
+        <artifactId>testng</artifactId>
+        <version>7.x.x</version>
+    </dependency>
+    <dependency>
+        <groupId>io.rest-assured</groupId>
+        <artifactId>rest-assured</artifactId>
+        <version>5.x.x</version>
+    </dependency>
+</dependencies>
+
+Functional Testing with Selenium:
+Automate the following workflows:
+
+Patient Record Creation:
+
+Create a test to validate form inputs with valid and invalid data.
+Include checks for required fields, incorrect formats, and proper error messages.
+Sample Code:
+
+java
+Copy code
+@Test
+public void testPatientRecordCreation() {
+    driver.get("https://example-healthcare.com/create-patient");
+
+    // Locate and fill out form fields
+    driver.findElement(By.id("name")).sendKeys("John Doe");
+    driver.findElement(By.id("email")).sendKeys("invalid-email");
+    driver.findElement(By.id("submit")).click();
+
+    // Validate error message for email
+    String errorMsg = driver.findElement(By.id("email-error")).getText();
+    Assert.assertEquals(errorMsg, "Please enter a valid email address.");
+}
+
+Search Functionality:
+
+Automate tests for valid and invalid search inputs.
+Sample Code:
+
+java
+Copy code
+@Test
+public void testSearchFunctionality() {
+    driver.get("https://example-healthcare.com/search-patient");
+
+    // Valid search
+    driver.findElement(By.id("search")).sendKeys("John Doe");
+    driver.findElement(By.id("search-button")).click();
+    Assert.assertTrue(driver.findElement(By.id("result")).isDisplayed());
+
+    // Invalid search
+    driver.findElement(By.id("search")).clear();
+    driver.findElement(By.id("search")).sendKeys("NonExistent Patient");
+    driver.findElement(By.id("search-button")).click();
+    String noResultMsg = driver.findElement(By.id("no-result")).getText();
+    Assert.assertEquals(noResultMsg, "No records found.");
+}
+Pagination and Sorting:
+
+Validate pagination by navigating through pages and verifying entries.
+Test sorting by patient name or date.
+Sample Code:
+
+java
+Copy code
+@Test
+public void testPaginationAndSorting() {
+    driver.get("https://example-healthcare.com/patients");
+
+    // Navigate to the second page
+    driver.findElement(By.id("pagination-next")).click();
+    String pageHeader = driver.findElement(By.id("page-number")).getText();
+    Assert.assertEquals(pageHeader, "Page 2");
+
+    // Sort by patient name
+    driver.findElement(By.id("sort-name")).click();
+    List<WebElement> names = driver.findElements(By.cssSelector(".patient-name"));
+    Assert.assertTrue(isSorted(names));
+}
+
+private boolean isSorted(List<WebElement> elements) {
+    List<String> names = elements.stream().map(WebElement::getText).collect(Collectors.toList());
+    return Ordering.natural().isOrdered(names);
+}
+
+API Testing with REST Assured:
+Automate CRUD operations on patient records.
+
+Testing the API Endpoints:
+Create a patient record:
+java
+Copy code
+@Test
+public void testCreatePatientAPI() {
+    given()
+        .contentType("application/json")
+        .body("{\"name\":\"John Doe\",\"age\":30,\"email\":\"john.doe@example.com\"}")
+    .when()
+        .post("https://example-healthcare.com/api/patients")
+    .then()
+        .statusCode(201)
+        .body("name", equalTo("John Doe"));
+}
+Delete a non-existent record:
+java
+Copy code
+@Test
+public void testDeleteNonExistentRecord() {
+    given()
+        .when()
+        .delete("https://example-healthcare.com/api/patients/99999")
+        .then()
+        .statusCode(404);
+}
+UI Testing with Selenium:
+Form Validations:
+Validate required fields, input formats, and dropdown options.
+Button and Navigation:
+Automate navigation workflows like submitting forms and verifying redirections.
+Responsive Design Testing (Optional):
+Use WebDriver’s setWindowSize method to simulate different screen sizes.
+
+2. CI/CD Pipeline Setup
+Using GitHub Actions: Create a .github/workflows/selenium-tests.yml file:
+
+yaml
+Copy code
+name: Selenium Tests
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+
+      - name: Install dependencies
+        run: mvn install
+
+      - name: Run Tests
+        run: mvn test
+Test Execution Report: Use TestNG Reports or integrate Allure for enhanced reporting:
+
+Add Maven dependency:
+xml
+Copy code
+<dependency>
+    <groupId>io.qameta.allure</groupId>
+    <artifactId>allure-testng</artifactId>
+    <version>2.13.9</version>
+</dependency>
+
+3. Deliverables
+Automated Test Scripts:
+
+Include all Selenium and API scripts.
+CI Configuration Files:
+
+Provide selenium-tests.yml or Jenkinsfile for pipeline setup.
+Execution Report:
+
+Generate and submit TestNG or Allure reports.
+Defect Reports: Example:
+
+Description	                            Steps to Reproduce	              Expected Result	                       Actual Result	           Severity
+Invalid email error not shown	          Enter invalid email	           Error: "Invalid email address"          	No error shown	             High
+
+
+
